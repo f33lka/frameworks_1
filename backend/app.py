@@ -60,3 +60,16 @@ def create_app():
         init_db()
 
     return app
+
+def init_db():
+    db.create_all()
+    # seed admin if not exists
+    if not User.query.filter_by(email="admin@example.com").first():
+        admin = User(email="admin@example.com", name="Admin", role="manager",
+                     password_hash=generate_password_hash("admin123"))
+        db.session.add(admin)
+        db.session.commit()
+    # seed sample project
+    if not Project.query.first():
+        p = Project(name="Объект 1", description="Строительный объект №1")
+        db.session.add(p); db.session.commit()
