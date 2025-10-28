@@ -59,3 +59,24 @@ def create_defect():
     db.session.add(d)
     db.session.commit()
     return jsonify(serialize_defect(d)), 201
+
+@bp.patch("/<int:did>/status")
+@jwt_required()
+def update_status(did):
+    d = Defect.query.get_or_404(did)
+    data = request.get_json() or {}
+    new_status = (data.get("status") or "").lower()
+    if new_status not in ALLOWED_STATUSES:
+        return jsonify({"error":"invalid status"}), 400
+    allowed = {
+        "new": {"in_progress","cancelled"},
+        "in_progress": {"in_review","cancelled"},
+        "in_review": {"closed","in_progress","cancelled"},
+        "closed": set(),
+        "cancelled": set()
+    }
+    if new_status not in allowed.get(d.status, set()):
+        return jsonify({"error":"invalid transition", "from": d.status, "to": new_status}), 409
+    d.status = new_status
+    db.session.commit()
+    return jsonify(serialize_defect(d))
