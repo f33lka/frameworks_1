@@ -40,3 +40,11 @@ def update_project(pid):
         p.description = data["description"] or ""
     db.session.commit()
     return jsonify({"id": p.id, "name": p.name, "description": p.description})
+
+@bp.delete("/<int:pid>")
+@role_required("manager")
+def delete_project(pid):
+    p = Project.query.get_or_404(pid)
+    db.session.delete(p)
+    db.session.commit()
+    return jsonify({"ok": True})
