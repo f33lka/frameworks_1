@@ -105,3 +105,24 @@ def update_defect(did):
         d.assignee_id = aid
     db.session.commit()
     return jsonify(serialize_defect(d))
+
+@bp.delete("/<int:did>")
+@role_required("manager")
+def delete_defect(did):
+    d = Defect.query.get_or_404(did)
+    db.session.delete(d)
+    db.session.commit()
+    return jsonify({"ok": True})
+
+def serialize_defect(d: Defect):
+    return {
+        "id": d.id,
+        "project_id": d.project_id,
+        "title": d.title,
+        "description": d.description,
+        "priority": d.priority,
+        "status": d.status,
+        "assignee_id": d.assignee_id,
+        "created_at": d.created_at.isoformat(),
+        "updated_at": d.updated_at.isoformat() if d.updated_at else None
+    }
