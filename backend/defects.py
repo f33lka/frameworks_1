@@ -80,3 +80,28 @@ def update_status(did):
     d.status = new_status
     db.session.commit()
     return jsonify(serialize_defect(d))
+
+@bp.put("/<int:did>")
+@jwt_required()
+def update_defect(did):
+    d = Defect.query.get_or_404(did)
+    data = request.get_json() or {}
+    if "title" in data:
+        t = (data["title"] or "").strip()
+        if not t:
+            return jsonify({"error":"title required"}), 400
+        d.title = t
+    if "description" in data:
+        d.description = data["description"] or ""
+    if "priority" in data:
+        pr = (data["priority"] or "").lower()
+        if pr not in ALLOWED_PRIORITIES:
+            return jsonify({"error":"invalid priority"}), 400
+        d.priority = pr
+    if "assignee_id" in data:
+        aid = data["assignee_id"]
+        if aid and not User.query.get(aid):
+            return jsonify({"error":"assignee not found"}), 404
+        d.assignee_id = aid
+    db.session.commit()
+    return jsonify(serialize_defect(d))
