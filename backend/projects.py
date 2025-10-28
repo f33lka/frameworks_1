@@ -25,3 +25,18 @@ def create_project():
     db.session.add(p)
     db.session.commit()
     return jsonify({"id": p.id, "name": p.name, "description": p.description}), 201
+
+@bp.put("/<int:pid>")
+@role_required("manager")
+def update_project(pid):
+    p = Project.query.get_or_404(pid)
+    data = request.get_json() or {}
+    if "name" in data:
+        name = (data["name"] or "").strip()
+        if not name:
+            return jsonify({"error": "name required"}), 400
+        p.name = name
+    if "description" in data:
+        p.description = data["description"] or ""
+    db.session.commit()
+    return jsonify({"id": p.id, "name": p.name, "description": p.description})
