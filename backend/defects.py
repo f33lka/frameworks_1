@@ -34,3 +34,28 @@ def list_defects():
 
     items = q.order_by(Defect.created_at.desc()).all()
     return jsonify([serialize_defect(d) for d in items])
+
+@bp.post("")
+@jwt_required()
+def create_defect():
+    data = request.get_json() or {}
+    project_id = data.get("project_id")
+    title = (data.get("title") or "").strip()
+    if not project_id or not title:
+        return jsonify({"error":"project_id and title required"}), 400
+    if not Project.query.get(project_id):
+        return jsonify({"error":"project not found"}), 404
+    priority = (data.get("priority") or "medium").lower()
+    if priority not in ALLOWED_PRIORITIES:
+        return jsonify({"error":"invalid priority"}), 400
+    d = Defect(
+        project_id=project_id,
+        title=title,
+        description=data.get("description",""),
+        priority=priority,
+        status="new",
+        assignee_id=data.get("assignee_id")
+    )
+    db.session.add(d)
+    db.session.commit()
+    return jsonify(serialize_defect(d)), 201
