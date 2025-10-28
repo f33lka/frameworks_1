@@ -73,3 +73,7 @@ def init_db():
     if not Project.query.first():
         p = Project(name="Объект 1", description="Строительный объект №1")
         db.session.add(p); db.session.commit()
+
+if __name__ == "__main__":
+    app = create_app()
+    app.run(host="127.0.0.1", port=5000, debug=True)
